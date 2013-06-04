@@ -12,15 +12,15 @@ end
 
 if !STDOUT.tty? && STDERR.tty?
   G[:prprog] = true
-  G[:BS] = "\b" * 60
-  G[:WS] = " " * 60
+  G[:BS] = "\b" * 78
+  G[:WS] = " " * 78
   def tee(txt, both: true)
     puts txt
     STDERR.print txt if both
   end
 else
   G[:prprog] = false
-  def tee(txt)
+  def tee(txt, both: true)
     puts txt
   end
 end
