@@ -3,6 +3,7 @@
 
 require 'openssl'
 require_relative 'win32ft'
+W = Win32ft
 
 trap "SIGINT" do
   STDERR.puts "exit on Ctrl-C."
@@ -30,21 +31,22 @@ def rolloldtime(d1, d2)
       rolloldtime(f1, f2)
     elsif File.file?(f1) && File.file?(f2)
       begin
-        tc1, ta1, tm1, sz1 = Win32ft.getfiletime(f1, getsize: true)
-        tc2, ta2, tm2, sz2 = Win32ft.getfiletime(f2, getsize: true)
+        tc1, ta1, tm1, sz1 = W.getfiletime(f1, getsize: true)
+        tc2, ta2, tm2, sz2 = W.getfiletime(f2, getsize: true)
         if sz1 == sz2 && (tc1 != tc2 || tm1 != tm2) && File.readable?(f1) && File.readable?(f2)
+          next if sz1 > 2**20 * 200
           md1, md2 = getmd5(f1), getmd5(f2)
           if md1 == md2
             tcx = [tc1, tc2].min
             tax = [ta1, ta2].min
             tmx = [tm1, tm2].min
             if [tcx,tmx] != [tc1,tm1]
-              Win32ft.setfiletime(f1, tcx, tax, tmx)
-              puts " <   #{f1} #{tcx} #{tax} #{tmx}"
+              W.setfiletime(f1, tcx, tax, tmx)
+              puts " <   #{f1}   CT:#{W.ft2st(W.ft2lft(tcx))}   MT:#{W.ft2st(W.ft2lft(tmx))}"
             end
             if [tcx,tmx] != [tc2,tm2]
-              Win32ft.setfiletime(f2, tcx, tax, tmx)
-              puts "   > #{f2} #{tcx} #{tax} #{tmx}"
+              W.setfiletime(f2, tcx, tax, tmx)
+              puts "   > #{f2}   CT:#{W.ft2st(W.ft2lft(tcx))}   MT:#{W.ft2st(W.ft2lft(tmx))}"
             end
           end
         end
