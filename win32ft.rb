@@ -38,6 +38,9 @@ class FileTime < FFI::Struct
   def to_s
     "0x%08X%08X" % [self[:dwHighDateTime], self[:dwLowDateTime]]
   end
+  def inspect
+    to_s
+  end
   def to_i
     ((self[:dwHighDateTime] << 32 | self[:dwLowDateTime]) - 116444736000000000) / 10**7.0
   end
@@ -78,6 +81,9 @@ class SystemTime < FFI::Struct
     "%04d-%02d-%02d %02d:%02d:%02d.%d" % [
       self[:wYear],self[:wMonth],self[:wDay],self[:wHour],self[:wMinute],self[:wSecond],self[:wMilliseconds]
     ]
+  end
+  def inspect
+    to_s
   end
 end
 

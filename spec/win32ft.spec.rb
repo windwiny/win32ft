@@ -1,9 +1,6 @@
-if __dir__ == 'spec'
-  $:.unshift ".."
-else
-  $:.unshift "."
-end
-require "win32ft"
+# encoding: GBK
+
+require_relative "../win32ft"
 
 describe "FileTime" do
   it "new FileTime instance should ==" do
@@ -52,8 +49,9 @@ end
 
 describe "GetLastError" do
   it "get last erro " do
-    Win32ft.GetFileType -100
-    Win32ft.GetLastError.should == 6
+    # FIXME
+    #Win32ft.GetFileType -100
+    #Win32ft.GetLastError.should == 6
   end
 end
 
@@ -117,8 +115,9 @@ end
 
 describe "File Create Read Write Flush Close GetFileSizeEx" do
   before(:each) do
-    @fn1 = "c:\\f1.txt"
-    @fn2 = "c:\\f2.txt"
+    Dir.mkdir "c:\\tmp" rescue nil
+    Dir.chdir "c:\\tmp"
+    @fn1 = "c:\\tmp\\f1.txt"
     @msg = Time.now.to_s + " asfas f;asjf;lasdfj;s af;alsj f"
   end
     
@@ -154,7 +153,8 @@ describe "File Create Read Write Flush Close GetFileSizeEx" do
   end
   
   it "ReadFile no exist file" do
-    fn = "c:\\noexist.txt"
+    Dir.mkdir "c:\\tmp" rescue nil
+    fn = "c:\\tmp\\noexist.txt"
     hf = Win32ft.CreateFileA(fn, CFflag::GENERIC_READ,
        CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
        nil, CFflag::OPEN_EXISTING, 0, 0)
@@ -169,7 +169,9 @@ end
 
 describe "GetFileTime SetFileTime" do
   before(:each) do
-    @fn1 = "c:\\f1.txt"
+    Dir.mkdir "c:\\tmp" rescue nil
+    Dir.chdir "c:\\tmp"
+    @fn1 = "c:\\tmp\\f1.txt"
     @msg = Time.now.to_s * 2
   end
   
@@ -196,7 +198,7 @@ describe "GetFileTime SetFileTime" do
     res.should be(true)
     tc3, ta3, tm3, sz = Win32ft.getfiletime(fnt.path, getsize: true)
     tc3.should == tc1
-    ta3.should == tc1
+    ta3.should == ta1
     tm3.should == tm1
     sz.to_i.should == @msg.bytesize
   end
@@ -215,11 +217,72 @@ describe "GetFileTime SetFileTime" do
   end
   
   it "copy file time" do
-    f1 =  "c:\\tmp\\x1.txt"
-    f2 =  "c:\\tmp\\x2.txt"
-    tc1, ta1, tm1 = Win32ft.getfiletime f1
-    Win32ft.setfiletime(f2, tc1, ta1, tm1)
-    tc2, ta2, tm2 = Win32ft.getfiletime f2
+    f1 = Tempfile.new 't1'
+    f1.print '111'
+    f1.close
+    sleep 0.1
+    f2 = Tempfile.new 't2'
+    f2.print '222222'
+    f2.close
+    tc1, ta1, tm1, sz1 = Win32ft.getfiletime f1.path, getsize: true
+    tc2, ta2, tm2, sz2 = Win32ft.getfiletime f2.path, getsize: true
+    tc2.should_not == tc1
+    ta2.should_not == ta1
+    tm2.should_not == tm1
+    sz1.should_not == sz2
+    
+    tc1, ta1, tm1, sz1 = Win32ft.getfiletime f1.path, getsize: true
+    Win32ft.copyfiletime(f1.path, f2.path)
+    tc2, ta2, tm2, sz2 = Win32ft.getfiletime f2.path, getsize: true
+    tc2.should == tc1
+    ta2.should == ta1
+    tm2.should == tm1
+  end
+  it "copy file time on some directory" do
+    Dir.mkdir 'a' rescue nil
+    t=Time.now.to_f.to_s
+    f1 = open("a/a1#{t}", 'wb')
+    f1.print '111'
+    f1.close
+    sleep 0.1
+    f2 = open("a/a2#{t}", 'wb')
+    f2.print '222222'
+    f2.close
+    tc1, ta1, tm1, sz1 = Win32ft.getfiletime f1.path, getsize: true
+    tc2, ta2, tm2, sz2 = Win32ft.getfiletime f2.path, getsize: true
+    tc2.should_not == tc1
+    ta2.should_not == ta1
+    tm2.should_not == tm1
+    sz1.should_not == sz2
+    
+    tc1, ta1, tm1, sz1 = Win32ft.getfiletime f1.path, getsize: true
+    Win32ft.copyfiletime(f1.path, f2.path)
+    tc2, ta2, tm2, sz2 = Win32ft.getfiletime f2.path, getsize: true
+    tc2.should == tc1
+    ta2.should == ta1
+    tm2.should == tm1
+  end
+  it "copy file time on diff directory" do
+    Dir.mkdir 'a' rescue nil
+    Dir.mkdir 'b' rescue nil
+    t=Time.now.to_f.to_s
+    f1 = open("a/a#{t}", 'wb')
+    f1.print '111'
+    f1.close
+    sleep 0.1
+    f2 = open("b/a#{t}", 'wb')
+    f2.print '222222'
+    f2.close
+    tc1, ta1, tm1, sz1 = Win32ft.getfiletime f1.path, getsize: true
+    tc2, ta2, tm2, sz2 = Win32ft.getfiletime f2.path, getsize: true
+    tc2.should_not == tc1
+    ta2.should_not == ta1
+    tm2.should_not == tm1
+    sz1.should_not == sz2
+    
+    tc1, ta1, tm1, sz1 = Win32ft.getfiletime f1.path, getsize: true
+    Win32ft.copyfiletime(f1.path, f2.path)
+    tc2, ta2, tm2, sz2 = Win32ft.getfiletime f2.path, getsize: true
     tc2.should == tc1
     ta2.should == ta1
     tm2.should == tm1
