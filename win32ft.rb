@@ -4,8 +4,8 @@
 require "ffi"
 
 class FileTime < FFI::Struct
-  layout :dwLowDateTime, FFI::Type::UINT32,
-          :dwHighDateTime, FFI::Type::UINT32
+  layout :dwLowDateTime, :uint,
+          :dwHighDateTime, :uint
   
   def ==(other)
     if other.is_a? self.class
@@ -31,14 +31,14 @@ class FileTime < FFI::Struct
 end
 
 class SystemTime < FFI::Struct
-  layout :wYear, FFI::Type::USHORT,
-          :wMonth, FFI::Type::USHORT,
-          :wDayOfWeek, FFI::Type::USHORT,
-          :wDay, FFI::Type::USHORT,
-          :wHour, FFI::Type::USHORT,
-          :wMinute, FFI::Type::USHORT,
-          :wSecond, FFI::Type::USHORT,
-          :wMilliseconds, FFI::Type::USHORT
+  layout :wYear, :ushort,
+          :wMonth, :ushort,
+          :wDayOfWeek, :ushort,
+          :wDay, :ushort,
+          :wHour, :ushort,
+          :wMinute, :ushort,
+          :wSecond, :ushort,
+          :wMilliseconds, :ushort
 
   def ==(other)
     if other.is_a? self.class
@@ -69,8 +69,8 @@ class SystemTime < FFI::Struct
 end
 
 class Large_Integer < FFI::Struct
-  layout :LowPart, FFI::Type::UINT32,
-          :HighPart, FFI::Type::UINT32
+  layout :LowPart, :uint,
+          :HighPart, :uint
 
   def ==(other)
     if other.is_a? self.class
@@ -99,7 +99,7 @@ class Large_Integer < FFI::Struct
 end
 
 class HANDLE < FFI::Struct
-  layout :handle, FFI::Type::UINT32
+  layout :handle, :uint
 end
 
 class CFflag
@@ -211,16 +211,14 @@ FlushFileBuffers(HANDLE)
 
 CloseHandle(HANDLE)
 =end
-  attach_function  :CreateFileA,  [FFI::Type::STRING, FFI::Type::UINT32,
-       FFI::Type::UINT32, :pointer, FFI::Type::UINT32,
-       FFI::Type::UINT32, FFI::Type::UINT32], FFI::Type::INT32
-  attach_function :ReadFile, [FFI::Type::INT32, :pointer, :uint32, :pointer, :pointer], :bool
-  attach_function :WriteFile, [FFI::Type::INT32, :pointer, :uint32, :pointer, :pointer], :bool
-  attach_function :FlushFileBuffers, [FFI::Type::INT32], :bool
-  attach_function :CloseHandle, [FFI::Type::INT32], :bool
+  attach_function  :CreateFileA,  [:string, :uint, :uint, :pointer, :uint, :uint, :int], :int
+  attach_function :ReadFile, [:int, :pointer, :uint32, :pointer, :pointer], :bool
+  attach_function :WriteFile, [:int, :pointer, :uint32, :pointer, :pointer], :bool
+  attach_function :FlushFileBuffers, [:int], :bool
+  attach_function :CloseHandle, [:int], :bool
   
-  attach_function :GetFileTime, [FFI::Type::INT32, FileTime.by_ref, FileTime.by_ref, FileTime.by_ref], :bool
-  attach_function :SetFileTime, [FFI::Type::INT32, FileTime.by_ref, FileTime.by_ref, FileTime.by_ref], :bool
+  attach_function :GetFileTime, [:int, FileTime.by_ref, FileTime.by_ref, FileTime.by_ref], :bool
+  attach_function :SetFileTime, [:int, FileTime.by_ref, FileTime.by_ref, FileTime.by_ref], :bool
   def self.getfiletime(fn, getsize: false)
     size = Large_Integer.new if getsize
     tc, ta, tm = FileTime.new, FileTime.new, FileTime.new
@@ -260,7 +258,7 @@ CloseHandle(HANDLE)
     tt
   end
   
-  attach_function :GetFileSizeEx, [FFI::Type::INT32, Large_Integer.by_ref], :bool
+  attach_function :GetFileSizeEx, [:int, Large_Integer.by_ref], :bool
   def self.getfilesize(fn)
     hf = CreateFileA(fn, CFflag::GENERIC_READ, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
         nil, CFflag::OPEN_EXISTING, CFflag::FILE_FLAG_BACKUP_SEMANTICS, 0)
