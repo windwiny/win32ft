@@ -7,6 +7,19 @@ class FileTime < FFI::Struct
   layout :dwLowDateTime, :uint,
           :dwHighDateTime, :uint
   
+  include Comparable
+  def <=>(other)
+    s1 = self[:dwHighDateTime] << 32 | self[:dwLowDateTime]
+    o1 = other[:dwHighDateTime] << 32 | other[:dwLowDateTime]
+    if s1 < o1
+      -1
+    elsif s1 == o1
+      0
+    else
+      1
+    end
+  end
+
   def ==(other)
     if other.is_a? self.class
       self[:dwLowDateTime] == other[:dwLowDateTime] && self[:dwHighDateTime] == other[:dwHighDateTime]
@@ -244,6 +257,10 @@ CloseHandle(HANDLE)
     raise "setfiletime: SetFileTime error." if !res
     CloseHandle(hf)
     true
+  end
+  def self.copyfiletime(fn1, fn2)
+    tc1, ta1, tm1 = getfiletime(fn1)
+    setfiletime(fn2, tc1, ta1, tm1)
   end
   def self.double2ft(tt)
     wintt = (tt * 10**7 + 116444736000000000).to_i

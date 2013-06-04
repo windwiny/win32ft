@@ -213,4 +213,15 @@ describe "GetFileTime SetFileTime" do
     (ta2[:dwLowDateTime] - ta1[:dwLowDateTime]).should <= 10
     (tm2[:dwLowDateTime] - tm1[:dwLowDateTime]).should <= 10
   end
+  
+  it "copy file time" do
+    f1 =  "c:\\tmp\\x1.txt"
+    f2 =  "c:\\tmp\\x2.txt"
+    tc1, ta1, tm1 = Win32ft.getfiletime f1
+    Win32ft.setfiletime(f2, tc1, ta1, tm1)
+    tc2, ta2, tm2 = Win32ft.getfiletime f2
+    tc2.should == tc1
+    ta2.should == ta1
+    tm2.should == tm1
+  end
 end
