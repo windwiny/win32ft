@@ -1,4 +1,8 @@
-$:.unshift ".."
+if __dir__ == 'spec'
+  $:.unshift ".."
+else
+  $:.unshift "."
+end
 require "win32ft"
 
 describe "FileTime" do
