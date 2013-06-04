@@ -93,6 +93,9 @@ class Large_Integer < FFI::Struct
   def to_s
     to_i.to_s
   end
+  def inspect
+    to_i.to_s
+  end
 end
 
 class HANDLE < FFI::Struct
@@ -179,29 +182,29 @@ module Win32ft
   end
   
 =begin
-CreateFileA("", CF.GENERIC_READ,  CF.FILE_SHARE_READ | CF.FILE_SHARE_WRITE, 0, CF.OPEN_EXISTING, CF.FILE_FLAG_BACKUP_SEMANTICS, 0)
-CreateFileA("", CF.GENERIC_WRITE, CF.FILE_SHARE_READ | CF.FILE_SHARE_WRITE, 0, CF.OPEN_EXISTING, CF.FILE_FLAG_BACKUP_SEMANTICS, 0)
+CreateFileA("", GENERIC_READ,  FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)
+CreateFileA("", GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)
 
    LPCSTR  lpFileName,             # "filename"
    DWORD   dwDesiredAccess,        # GENERIC_READ / GENERIC_WRITE / GENERIC_EXECUTE / GENERIC_ALL
    DWORD   dwShareMode,            # FILE_SHARE_READ /| FILE_SHARE_WRITE / FILE_SHARE_DELETE
    LPSECURITY_ATTRIBUTES   lp,     # 0
    DWORD   dwCreationDisposition,  # CREATE_NEW / CREATE_ALWAYS / OPEN_EXISTING / OPEN_ALWAYS / TRUNCATE_EXISTING
-   DWORD   dwFlagsAndAttributes,   # 0 | CF.FILE_FLAG_BACKUP_SEMANTICS if dir
+   DWORD   dwFlagsAndAttributes,   # 0 | FILE_FLAG_BACKUP_SEMANTICS if dir
    HANDLE  hTemplateFile           # 0
        
 ReadFile(
     HANDLE,
-    ctypes.byref(sts),  # ctypes.create_string_buffer('',size=100).  chars
-    100,    # chars len
-    ctypes.byref(rd),   # ctypes.wintypes.DWORD(). # [output] read chars len
+    buf,      # FFI::MemoryPointer.new(:char, 100)
+    100,      # max read len
+    rded,     # FFI::MemoryPointer.new(:uint32,1). # [output] read bytes
     0)
 
 WriteFile(
     HANDLE,
-    ctypes.byref(sts),  # ctypes.create_string_buffer('abcde',size=100).  chars
-    5,    # chars len
-    ctypes.byref(wd),   # ctypes.wintypes.DWORD(). # [output] write chars len
+    buf,      # FFI::MemoryPointer.new(:char, 100)
+    5,        # write string len
+    wded,     # FFI::MemoryPointer.new(:uint32,1). # [output] write bytes
     0)
 
 FlushFileBuffers(HANDLE)
@@ -219,13 +222,9 @@ CloseHandle(HANDLE)
   attach_function :GetFileTime, [FFI::Type::INT32, FileTime.by_ref, FileTime.by_ref, FileTime.by_ref], :bool
   attach_function :SetFileTime, [FFI::Type::INT32, FileTime.by_ref, FileTime.by_ref, FileTime.by_ref], :bool
   def self.getfiletime(fn, getsize: false)
+    size = Large_Integer.new if getsize
     tc, ta, tm = FileTime.new, FileTime.new, FileTime.new
-    if getsize
-      size = Large_Integer.new
-      ttts = [tc, ta, tm, size]
-    else
-      ttts = [tc, ta, tm]
-    end
+    ttts = [tc, ta, tm]
     hf = CreateFileA(fn, CFflag::GENERIC_READ, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
         nil, CFflag::OPEN_EXISTING, CFflag::FILE_FLAG_BACKUP_SEMANTICS, 0)
     raise "getfiletime: Can not open file \"#{fn}\"" if hf == -1
@@ -234,6 +233,7 @@ CloseHandle(HANDLE)
     if getsize
       res = GetFileSizeEx(hf, size)
       raise "getfiletime: GetFileSizeEx error." if !res
+      ttts << size.to_i
     end
     CloseHandle(hf)
     ttts
