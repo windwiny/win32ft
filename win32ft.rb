@@ -25,7 +25,7 @@ class FileTime < FFI::Struct
   def to_s
     "0x%08X%08X" % [self[:dwHighDateTime], self[:dwLowDateTime]]
   end
-  def to_ii
+  def to_i
     ((self[:dwHighDateTime] << 32 | self[:dwLowDateTime]) - 116444736000000000) / 10**7.0
   end
 end
@@ -228,21 +228,12 @@ CloseHandle(HANDLE)
     end
     hf = CreateFileA(fn, CFflag::GENERIC_READ, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
         nil, CFflag::OPEN_EXISTING, CFflag::FILE_FLAG_BACKUP_SEMANTICS, 0)
-    if hf == -1
-      STDERR.puts "getfiletime: Can not open file \"#{fn}\""
-      return ttts
-    end
+    raise "getfiletime: Can not open file \"#{fn}\"" if hf == -1
     res = GetFileTime(hf, tc, ta, tm)
-    if !res
-      STDERR.puts "getfiletime: GetFileTime error."
-      return ttts
-    end
+    raise "getfiletime: GetFileTime error." if !res
     if getsize
       res = GetFileSizeEx(hf, size)
-      if !res
-        STDERR.puts "getfiletime: GetFileSizeEx error."
-        return ttts
-      end
+      raise "getfiletime: GetFileSizeEx error." if !res
     end
     CloseHandle(hf)
     ttts
@@ -250,15 +241,9 @@ CloseHandle(HANDLE)
   def self.setfiletime(fn, tc, ta, tm)
     hf = CreateFileA(fn, CFflag::GENERIC_WRITE, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
         nil, CFflag::OPEN_EXISTING, CFflag::FILE_FLAG_BACKUP_SEMANTICS, 0)
-    if hf == -1
-      STDERR.puts "setfiletime: Can not open file \"#{fn}\""
-      return false
-    end
+    raise "setfiletime: Can not open file \"#{fn}\"" if hf == -1
     res = SetFileTime(hf, tc, ta, tm)
-    if !res
-      STDERR.puts "setfiletime: SetFileTime error."
-      return false
-    end
+    raise "setfiletime: SetFileTime error." if !res
     CloseHandle(hf)
     true
   end
@@ -279,16 +264,10 @@ CloseHandle(HANDLE)
   def self.getfilesize(fn)
     hf = CreateFileA(fn, CFflag::GENERIC_READ, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
         nil, CFflag::OPEN_EXISTING, CFflag::FILE_FLAG_BACKUP_SEMANTICS, 0)
-    if hf == -1
-      STDERR.puts "getfilesize: Can not open file \"#{fn}\""
-      return false
-    end
+    raise "getfilesize: Can not open file \"#{fn}\"" if hf == -1
     size = Large_Integer.new
     res = GetFileSizeEx(hf, size)
-    if !res
-      STDERR.puts "getfilesize: GetFileSizeEx error."
-      return false
-    end
+    raise "getfilesize: GetFileSizeEx error." if !res
     CloseHandle(hf)
     size.to_i
   end
