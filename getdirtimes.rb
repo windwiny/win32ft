@@ -26,7 +26,6 @@ else
 end
 
 def prdi(di)
-  Dir.chdir(di)
   $ids, $ifs = 0, 0
   t00 = t0 = Time.now
   Dir.glob('**/*').each do |fn|
@@ -54,12 +53,10 @@ def prdi(di)
 end
 
 def main
-  d0 = Dir.pwd
   ARGV.each do |fn|
     fn = File.absolute_path(fn)
     if File.directory? fn
-      prdi(fn)
-      Dir.chdir(d0)
+      Dir.chdir(fn) {prdi(fn)}
     end
   end
 end
