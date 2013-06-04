@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -wKU
+#!/usr/bin/env ruby -w
 # encoding: GBK
 
 require_relative 'win32ft'
@@ -54,9 +54,12 @@ def prdi(di)
 end
 
 def main
+  d0 = Dir.pwd
   ARGV.each do |fn|
+    fn = File.absolute_path(fn)
     if File.directory? fn
       prdi(fn)
+      Dir.chdir(d0)
     end
   end
 end
