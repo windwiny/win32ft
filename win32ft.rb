@@ -197,23 +197,23 @@ ReadFile(
     HANDLE,
     buf,      # FFI::MemoryPointer.new(:char, 100)
     100,      # max read len
-    rded,     # FFI::MemoryPointer.new(:uint32,1). # [output] read bytes
+    rded,     # FFI::MemoryPointer.new(:uint,1). # [output] read bytes
     0)
 
 WriteFile(
     HANDLE,
     buf,      # FFI::MemoryPointer.new(:char, 100)
     5,        # write string len
-    wded,     # FFI::MemoryPointer.new(:uint32,1). # [output] write bytes
+    wded,     # FFI::MemoryPointer.new(:uint,1). # [output] write bytes
     0)
 
 FlushFileBuffers(HANDLE)
 
 CloseHandle(HANDLE)
 =end
-  attach_function  :CreateFileA,  [:string, :uint, :uint, :pointer, :uint, :uint, :int], :int
-  attach_function :ReadFile, [:int, :pointer, :uint32, :pointer, :pointer], :bool
-  attach_function :WriteFile, [:int, :pointer, :uint32, :pointer, :pointer], :bool
+  attach_function :CreateFileA, [:string, :uint, :uint, :pointer, :uint, :uint, :int], :int
+  attach_function :ReadFile, [:int, :pointer, :uint, :pointer, :pointer], :bool
+  attach_function :WriteFile, [:int, :pointer, :uint, :pointer, :pointer], :bool
   attach_function :FlushFileBuffers, [:int], :bool
   attach_function :CloseHandle, [:int], :bool
   
