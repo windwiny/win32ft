@@ -261,6 +261,8 @@ describe "GetFileTime SetFileTime" do
     tc2.should == tc1
     ta2.should == ta1
     tm2.should == tm1
+    FileUtils.rm f1.path
+    FileUtils.rm f2.path
   end
   it "copy file time on diff directory" do
     Dir.mkdir 'a' rescue nil
@@ -286,5 +288,7 @@ describe "GetFileTime SetFileTime" do
     tc2.should == tc1
     ta2.should == ta1
     tm2.should == tm1
+    FileUtils.rm f1.path
+    FileUtils.rm f2.path
   end
 end
