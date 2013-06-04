@@ -166,6 +166,7 @@ end
 describe "GetFileTime SetFileTime" do
   before(:each) do
     @fn1 = "c:\\f1.txt"
+    @msg = Time.now.to_s * 2
   end
   
   it "getfiletime" do
@@ -175,11 +176,11 @@ describe "GetFileTime SetFileTime" do
     tm1.should_not == FileTime.new
   end
   
-  it "setfiletime" do
+  it "setfiletime getfiletime getfilesize" do
     require 'tempfile'
     tc1, ta1, tm1 = Win32ft.getfiletime(@fn1)
     fnt = Tempfile.new 'test'
-    fnt.puts Time.now.to_s
+    fnt.print @msg
     fnt.close
 
     tc2, ta2, tm2 = Win32ft.getfiletime(fnt.path)
@@ -189,10 +190,11 @@ describe "GetFileTime SetFileTime" do
     
     res = Win32ft.setfiletime(fnt.path, tc1, ta1, tm1)
     res.should be(true)
-    tc3, ta3, tm3 = Win32ft.getfiletime(fnt.path)
+    tc3, ta3, tm3, sz = Win32ft.getfiletime(fnt.path, getsize: true)
     tc3.should == tc1
     ta3.should == tc1
     tm3.should == tm1
+    sz.to_i.should == @msg.bytesize
   end
   
   it "ft2double double2ft" do

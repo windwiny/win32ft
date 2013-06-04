@@ -218,33 +218,45 @@ CloseHandle(HANDLE)
   
   attach_function :GetFileTime, [FFI::Type::INT32, FileTime.by_ref, FileTime.by_ref, FileTime.by_ref], :bool
   attach_function :SetFileTime, [FFI::Type::INT32, FileTime.by_ref, FileTime.by_ref, FileTime.by_ref], :bool
-  def self.getfiletime(fn)
+  def self.getfiletime(fn, getsize: false)
     tc, ta, tm = FileTime.new, FileTime.new, FileTime.new
-    ttts = [tc, ta, tm]
-    hf = Win32ft.CreateFileA(fn, CFflag::GENERIC_READ, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
+    if getsize
+      size = Large_Integer.new
+      ttts = [tc, ta, tm, size]
+    else
+      ttts = [tc, ta, tm]
+    end
+    hf = CreateFileA(fn, CFflag::GENERIC_READ, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
         nil, CFflag::OPEN_EXISTING, CFflag::FILE_FLAG_BACKUP_SEMANTICS, 0)
     if hf == -1
-      STDERR.puts "Can not open file \"#{fn}\""
+      STDERR.puts "getfiletime: Can not open file \"#{fn}\""
       return ttts
     end
-    res = Win32ft.GetFileTime(hf, tc, ta, tm)
-    Win32ft.CloseHandle(hf)
+    res = GetFileTime(hf, tc, ta, tm)
     if !res
-      STDERR.puts "GetFileTime error."
+      STDERR.puts "getfiletime: GetFileTime error."
       return ttts
     end
+    if getsize
+      res = GetFileSizeEx(hf, size)
+      if !res
+        STDERR.puts "getfiletime: GetFileSizeEx error."
+        return ttts
+      end
+    end
+    CloseHandle(hf)
     ttts
   end
   def self.setfiletime(fn, tc, ta, tm)
     hf = CreateFileA(fn, CFflag::GENERIC_WRITE, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
         nil, CFflag::OPEN_EXISTING, CFflag::FILE_FLAG_BACKUP_SEMANTICS, 0)
     if hf == -1
-      STDERR.puts "Can not open file \"#{fn}\""
+      STDERR.puts "setfiletime: Can not open file \"#{fn}\""
       return false
     end
-    res = Win32ft.SetFileTime(hf, tc, ta, tm)
+    res = SetFileTime(hf, tc, ta, tm)
     if !res
-      STDERR.puts "SetFileTime error."
+      STDERR.puts "setfiletime: SetFileTime error."
       return false
     end
     CloseHandle(hf)
@@ -268,13 +280,13 @@ CloseHandle(HANDLE)
     hf = CreateFileA(fn, CFflag::GENERIC_READ, CFflag::FILE_SHARE_READ | CFflag::FILE_SHARE_WRITE,
         nil, CFflag::OPEN_EXISTING, CFflag::FILE_FLAG_BACKUP_SEMANTICS, 0)
     if hf == -1
-      STDERR.puts "Can not open file \"#{fn}\""
+      STDERR.puts "getfilesize: Can not open file \"#{fn}\""
       return false
     end
     size = Large_Integer.new
-    res = Win32ft.GetFileSizeEx(hf, size)
+    res = GetFileSizeEx(hf, size)
     if !res
-      STDERR.puts "GetFileSizeEx error."
+      STDERR.puts "getfilesize: GetFileSizeEx error."
       return false
     end
     CloseHandle(hf)
