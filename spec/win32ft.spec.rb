@@ -114,7 +114,7 @@ end
 
 
 describe "File Create Read Write Flush Close GetFileSizeEx" do
-  before(:each) do
+  before(:all) do
     Dir.mkdir "c:\\tmp" rescue nil
     Dir.chdir "c:\\tmp"
     @fn1 = "c:\\tmp\\f1.txt"
@@ -168,13 +168,19 @@ describe "File Create Read Write Flush Close GetFileSizeEx" do
 end
 
 describe "GetFileTime SetFileTime" do
-  before(:each) do
+  before(:all) do
     Dir.mkdir "c:\\tmp" rescue nil
     Dir.chdir "c:\\tmp"
     @fn1 = "c:\\tmp\\f1.txt"
     @msg = Time.now.to_s * 2
   end
-  
+
+  after(:all) do
+    Win32ft.DeleteFile(@fn1).should == true
+    Dir.chdir "c:\\"
+    Dir.rmdir "c:\\tmp"
+  end
+
   it "getfiletime" do
     tc1, ta1, tm1 = Win32ft.getfiletime(@fn1)
     tc1.should_not == FileTime.new
@@ -261,8 +267,9 @@ describe "GetFileTime SetFileTime" do
     tc2.should == tc1
     ta2.should == ta1
     tm2.should == tm1
-    FileUtils.rm f1.path
-    FileUtils.rm f2.path
+    Win32ft.DeleteFile(f1.path).should == true
+    Win32ft.DeleteFile(f2.path).should == true
+    Dir.rmdir 'a' rescue nil
   end
   it "copy file time on diff directory" do
     Dir.mkdir 'a' rescue nil
@@ -288,7 +295,9 @@ describe "GetFileTime SetFileTime" do
     tc2.should == tc1
     ta2.should == ta1
     tm2.should == tm1
-    FileUtils.rm f1.path
-    FileUtils.rm f2.path
+    Win32ft.DeleteFile(f1.path).should == true
+    Win32ft.DeleteFile(f2.path).should == true
+    Dir.rmdir 'a' rescue nil
+    Dir.rmdir 'b' rescue nil
   end
 end

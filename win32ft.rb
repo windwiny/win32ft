@@ -226,6 +226,10 @@ WriteFile(
     wded,     # FFI::MemoryPointer.new(:uint,1). # [output] write bytes
     0)
 
+DeleteFile(
+    LPCSTR  lpFileName,             # "filename"
+    )
+
 FlushFileBuffers(HANDLE)
 
 CloseHandle(HANDLE)
@@ -233,6 +237,7 @@ CloseHandle(HANDLE)
   attach_function :CreateFileA, [:string, :uint, :uint, :pointer, :uint, :uint, :int], :int
   attach_function :ReadFile, [:int, :pointer, :uint, :pointer, :pointer], :bool
   attach_function :WriteFile, [:int, :pointer, :uint, :pointer, :pointer], :bool
+  attach_function :DeleteFile, :DeleteFileA, [:string], :bool
   attach_function :FlushFileBuffers, [:int], :bool
   attach_function :CloseHandle, [:int], :bool
   
