@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby -w
 # encoding: GBK
 
-require_relative 'win32ft'
-require_relative "dirwalk"
+require 'win32ft'
+require "dirwalk"
 
 G = {
   :autorun => false,
@@ -14,8 +14,8 @@ G = {
   }
 
 trap "SIGINT" do
-  STDERR.puts "exit on Ctrl-C.  ids: #{$ids}  ifs: #{$ifs}"
-  exit 1
+  STDERR.puts "\n\nexit on Ctrl-C.  ids: #{$ids}  ifs: #{$ifs}"
+  exit(1)
 end
 
 if !STDOUT.tty? && STDERR.tty?
@@ -41,19 +41,19 @@ def prdi(di)
     $ids += 1
     tc, ta, tm = Win32ft.getfiletime(p)
     puts "#{p}\\ #{tc} #{ta} #{tm} 0"
-    if G[:prprog]
-      ts = Time.now
-      if ts - t0 > 0.3
-        STDERR.print "#{G[:BS]} Dir: #{di}  ds: #{$ids}  fs: #{$ifs}  time: #{ts - t00}"
-        t0 = ts
-      end
-    end
     fs.each do |fn|
       fn = File.join(p, fn)
       fn.gsub!('/', "\\")
       $ifs += 1
       tc, ta, tm, sz= Win32ft.getfiletime(fn, getsize: true)
       puts "#{fn} #{tc} #{ta} #{tm} #{sz}"
+    end
+    if G[:prprog]
+      ts = Time.now
+      if ts - t0 > 0.3
+        STDERR.print "#{G[:BS]} Dir: #{di}  ds: #{$ids}  fs: #{$ifs}  time: #{ts - t00}"
+        t0 = ts
+      end
     end
   end
   if G[:prprog]

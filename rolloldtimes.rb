@@ -2,7 +2,7 @@
 # encoding: GBK
 
 require 'openssl'
-require_relative 'win32ft'
+require 'win32ft'
 W = Win32ft
 
 trap "SIGINT" do
