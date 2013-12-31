@@ -68,6 +68,4 @@ def main
   rolloldtime(ARGV[0], ARGV[1])
 end
 
-if __FILE__ == $0
-  main
-end
+main
